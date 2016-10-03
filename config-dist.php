@@ -59,6 +59,17 @@ $CFG->dboptions = array(
     'dbport'    => '',          // the TCP port number to use when connecting
                                 //  to the server. keep empty string for the
                                 //  default port
+
+    // The following options are based on MySQL, and mirror those desribed in
+    // more detail at:
+    // https://dev.mysql.com/doc/refman/5.7/en/secure-connection-options.html
+    // Support for ssl, sslkey, sslcert and sslca is also available for pgsql.
+    'ssl'        => false, // If true, use SSL, if not, the following are ignored.
+    'sslkey'     => NULL,  // If set, ignore password and use client certificate
+    'sslcert'    => NULL,  // If set, ignore password and use client certificate
+    'sslca'      => NULL,  // If set, validate server certificate against CA
+    'sslcapath'  => NULL,  // If set, validate server certificate against CA dir
+    'sslcipher'  => NULL,  // If set, allow only these ciphers
 );
 
 
