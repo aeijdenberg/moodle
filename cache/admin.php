@@ -30,12 +30,16 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
 require_once($CFG->dirroot.'/cache/locallib.php');
 require_once($CFG->dirroot.'/cache/forms.php');
 
+$notifications = array();
+
 // The first time the user visits this page we are going to reparse the definitions.
 // Just ensures that everything is up to date.
 // We flag is session so that this only happens once as people are likely to hit
 // this page several times if making changes.
 if (empty($SESSION->cacheadminreparsedefinitions)) {
-    cache_helper::update_definitions();
+    if (cache_helper::update_definitions(false, true)) {
+        $notifications[] = array("Moodle has detected out of date cache definitions. Please click 'Refresh Definitions'", false);
+    }
     $SESSION->cacheadminreparsedefinitions = true;
 }
 
@@ -52,7 +56,6 @@ $locks = cache_administration_helper::get_lock_summaries();
 
 $title = new lang_string('cacheadmin', 'cache');
 $mform = null;
-$notifications = array();
 $notifysuccess = true;
 
 if (!empty($action) && confirm_sesskey()) {
