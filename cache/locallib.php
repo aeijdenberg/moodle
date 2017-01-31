@@ -29,6 +29,40 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+
+/**
+ * Recursive ksort. Arg should be an associative array.
+ */
+function ksort_all(&$conf) {
+    ksort($conf);
+    foreach ($conf as $key => $val) {
+        if (is_array($val)) {
+            ksort_all($val);
+        }
+    }
+}
+
+
+/**
+ * Given a configuration object, normalize it by sorting all elements
+ * in a repeatable order. This allows differences to be more easily
+ * readable by human.
+ */
+function normalize_conf(&$conf) {
+    usort($conf['modemappings'], function($a, $b) {
+        return $a['mode']-$b['mode'];
+    });
+    usort($conf['definitionmappings'], function($a, $b) {
+        $rv = strcmp($a['definition'], $b['definition']);
+        if ($rv == 0) {
+            $rv = $b['sort']-$a['sort'];
+        }
+        return $rv;
+    });
+    ksort_all($conf);
+}
+
+
 /**
  * Cache configuration writer.
  *
@@ -128,6 +162,7 @@ class cache_config_writer extends cache_config {
         $configuration['definitions'] = $this->configdefinitions;
         $configuration['definitionmappings'] = $this->configdefinitionmappings;
         $configuration['locks'] = $this->configlocks;
+        normalize_conf($configuration);
         return $configuration;
     }
 
