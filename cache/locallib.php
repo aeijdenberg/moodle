@@ -29,6 +29,21 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+
+/**
+ * Recursive ksort.
+ */
+function ksort_all(&$a) {
+    if (is_array($a)) {
+        ksort($a);
+        foreach ($a as $key => &$val) {
+            ksort_all($val);
+        }
+        unset($val); // probably not needed, but recommended after foreach with reference
+    }
+}
+
+
 /**
  * Cache configuration writer.
  *
@@ -128,6 +143,22 @@ class cache_config_writer extends cache_config {
         $configuration['definitions'] = $this->configdefinitions;
         $configuration['definitionmappings'] = $this->configdefinitionmappings;
         $configuration['locks'] = $this->configlocks;
+
+        // Deterministically sort arrays
+        usort($configuration['modemappings'], function($a, $b) {
+            return $a['mode']-$b['mode'];
+        });
+        usort($configuration['definitionmappings'], function($a, $b) {
+            $rv = strcmp($a['definition'], $b['definition']);
+            if ($rv == 0) {
+                $rv = $b['sort']-$a['sort'];
+            }
+            return $rv;
+        });
+
+        // And deterministicially sort associative arrays
+        ksort_all($configuration);
+
         return $configuration;
     }
 
@@ -543,6 +574,9 @@ class cache_config_writer extends cache_config {
                     debugging('Error: duplicate cache definition found with id: '.$id, DEBUG_DEVELOPER);
                     continue;
                 }
+                // Set defaults
+                cache_config::set_config_defaults($definition);
+
                 $definitions[$id] = $definition;
             }
         }
