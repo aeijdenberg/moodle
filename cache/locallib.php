@@ -528,13 +528,16 @@ class cache_config_writer extends cache_config {
      * Calls config_save further down, you should redirect immediately or asap after calling this method.
      *
      * @param bool $coreonly If set to true only core definitions will be updated.
+     * @param bool $reportonly If set to true the file will not be written.
+     * @return bool Returns true if $reportonly is set and a new config file needs to be written. If $reportonly is not set, return value is not defined.
      */
-    public static function update_definitions($coreonly = false) {
+    public static function update_definitions($coreonly = false, $reportonly = false) {
         $factory = cache_factory::instance();
         $factory->updating_started();
         $config = $factory->create_config_instance(true);
-        $config->write_definitions_to_cache(self::locate_definitions($coreonly));
+        $rv = $config->write_definitions_to_cache(self::locate_definitions($coreonly), $reportonly);
         $factory->updating_finished();
+        return $rv;
     }
 
     /**
@@ -587,8 +590,10 @@ class cache_config_writer extends cache_config {
     /**
      * Writes the updated definitions for the config file.
      * @param array $definitions
+     * @param bool $reportonly If set to true the file will not be written.
+     * @return bool Returns true if $reportonly is set and a new config file needs to be written. If $reportonly is not set, return value is not defined.
      */
-    private function write_definitions_to_cache(array $definitions) {
+    private function write_definitions_to_cache(array $definitions, $reportonly = false) {
 
         // Preserve the selected sharing option when updating the definitions.
         // This is set by the user and should never come from caches.php.
@@ -603,13 +608,30 @@ class cache_config_writer extends cache_config {
             }
         }
 
+        if ($reportonly) {
+            $before = $this->generate_configuration_array();
+
+            $previousConfigDefinitions = $this->configdefinitions;
+            $previousConfigDefinitionMappings = $this->configdefinitionmappings;
+        }
+
         $this->configdefinitions = $definitions;
         foreach ($this->configdefinitionmappings as $key => $mapping) {
             if (!array_key_exists($mapping['definition'], $definitions)) {
                 unset($this->configdefinitionmappings[$key]);
             }
         }
-        $this->config_save();
+
+        if ($reportonly) {
+            $after = $this->generate_configuration_array();
+
+            $this->configdefinitions = $previousConfigDefinitions;
+            $this->configdefinitionmappings = $previousConfigDefinitionMappings;
+
+            return var_export($before, true) != var_export($after, true);
+        } else {
+            $this->config_save();
+        }
     }
 
     /**

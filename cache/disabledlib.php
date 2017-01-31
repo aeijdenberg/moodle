@@ -452,9 +452,11 @@ class cache_config_disabled extends cache_config_writer {
      * Updates the definition in the configuration from those found in the cache files.
      *
      * @param bool $coreonly Unused.
+     * @param bool $reportonly Unused
+     * @return bool Unused
      */
-    public static function update_definitions($coreonly = false) {
-        // Nothing to do here.
+    public static function update_definitions($coreonly = false, $reportonly = false) {
+        return false;
     }
 
     /**

@@ -586,15 +586,22 @@ class cache_helper {
      * Finds all definitions and updates them within the cache config file.
      *
      * @param bool $coreonly If set to true only core definitions will be updated.
+     * @param bool $reportonly If set to true the file will not be written.
+     * @return bool Returns true if $reportonly is set and a new config file needs to be written. If $reportonly is not set, return value is not defined.
      */
-    public static function update_definitions($coreonly = false) {
+    public static function update_definitions($coreonly = false, $reportonly = false) {
         global $CFG;
         // Include locallib.
         require_once($CFG->dirroot.'/cache/locallib.php');
         // First update definitions
-        cache_config_writer::update_definitions($coreonly);
-        // Second reset anything we have already initialised to ensure we're all up to date.
-        cache_factory::reset();
+        $rv = cache_config_writer::update_definitions($coreonly, $reportonly);
+
+        if (!$reportonly) {
+            // Second reset anything we have already initialised to ensure we're all up to date.
+            cache_factory::reset();
+        }
+
+        return $rv;
     }
 
     /**
