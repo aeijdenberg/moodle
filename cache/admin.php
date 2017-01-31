@@ -30,6 +30,8 @@ require_once($CFG->dirroot.'/lib/adminlib.php');
 require_once($CFG->dirroot.'/cache/locallib.php');
 require_once($CFG->dirroot.'/cache/forms.php');
 
+admin_externalpage_setup('cacheconfig');
+
 // The first time the user visits this page we are going to reparse the definitions.
 // Just ensures that everything is up to date.
 // We flag is session so that this only happens once as people are likely to hit
@@ -41,7 +43,6 @@ if (empty($SESSION->cacheadminreparsedefinitions)) {
 
 $action = optional_param('action', null, PARAM_ALPHA);
 
-admin_externalpage_setup('cacheconfig');
 $context = context_system::instance();
 
 $stores = cache_administration_helper::get_store_instance_summaries();
