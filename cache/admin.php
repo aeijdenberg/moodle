@@ -40,7 +40,8 @@ $notifications = array();
 // this page several times if making changes.
 if (empty($SESSION->cacheadminreparsedefinitions)) {
     if (cache_helper::update_definitions(false, true)) {
-        $notifications[] = array("Moodle has detected out of date cache definitions. Please click 'Rescan definitions' far below", false);
+        $notifications[] = array("Moodle has detected out of date cache definitions. ".
+                                 "Please click 'Rescan definitions' far below", false);
     }
     $SESSION->cacheadminreparsedefinitions = true;
 }

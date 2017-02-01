@@ -32,6 +32,7 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Recursive ksort.
+ * @param array $a The array to sort
  */
 function ksort_all(&$a) {
     if (is_array($a)) {
@@ -39,7 +40,7 @@ function ksort_all(&$a) {
         foreach ($a as $key => &$val) {
             ksort_all($val);
         }
-        unset($val); // probably not needed, but recommended after foreach with reference
+        unset($val); // Probably not needed, but recommended after foreach with reference.
     }
 }
 
@@ -144,19 +145,19 @@ class cache_config_writer extends cache_config {
         $configuration['definitionmappings'] = $this->configdefinitionmappings;
         $configuration['locks'] = $this->configlocks;
 
-        // Deterministically sort arrays
+        // Deterministically sort arrays.
         usort($configuration['modemappings'], function($a, $b) {
-            return $a['mode']-$b['mode'];
+            return $a['mode'] - $b['mode'];
         });
         usort($configuration['definitionmappings'], function($a, $b) {
             $rv = strcmp($a['definition'], $b['definition']);
             if ($rv == 0) {
-                $rv = $b['sort']-$a['sort'];
+                $rv = $b['sort'] - $a['sort'];
             }
             return $rv;
         });
 
-        // And deterministicially sort associative arrays
+        // And deterministicially sort associative arrays.
         ksort_all($configuration);
 
         return $configuration;
@@ -529,7 +530,8 @@ class cache_config_writer extends cache_config {
      *
      * @param bool $coreonly If set to true only core definitions will be updated.
      * @param bool $reportonly If set to true the file will not be written.
-     * @return bool Returns true if $reportonly is set and a new config file needs to be written. If $reportonly is not set, return value is not defined.
+     * @return bool Returns true if $reportonly is set and a new config file needs to be written.
+     *              If $reportonly is not set, return value is not defined.
      */
     public static function update_definitions($coreonly = false, $reportonly = false) {
         $factory = cache_factory::instance();
@@ -577,7 +579,7 @@ class cache_config_writer extends cache_config {
                     debugging('Error: duplicate cache definition found with id: '.$id, DEBUG_DEVELOPER);
                     continue;
                 }
-                // Set defaults
+                // Set defaults.
                 cache_config::set_config_defaults($definition);
 
                 $definitions[$id] = $definition;
@@ -591,7 +593,8 @@ class cache_config_writer extends cache_config {
      * Writes the updated definitions for the config file.
      * @param array $definitions
      * @param bool $reportonly If set to true the file will not be written.
-     * @return bool Returns true if $reportonly is set and a new config file needs to be written. If $reportonly is not set, return value is not defined.
+     * @return bool Returns true if $reportonly is set and a new config file needs to be written.
+     *              If $reportonly is not set, return value is not defined.
      */
     private function write_definitions_to_cache(array $definitions, $reportonly = false) {
 
@@ -611,8 +614,8 @@ class cache_config_writer extends cache_config {
         if ($reportonly) {
             $before = $this->generate_configuration_array();
 
-            $previousConfigDefinitions = $this->configdefinitions;
-            $previousConfigDefinitionMappings = $this->configdefinitionmappings;
+            $previousconfigdefinitions = $this->configdefinitions;
+            $previousconfigdefinitionmappings = $this->configdefinitionmappings;
         }
 
         $this->configdefinitions = $definitions;
@@ -625,8 +628,8 @@ class cache_config_writer extends cache_config {
         if ($reportonly) {
             $after = $this->generate_configuration_array();
 
-            $this->configdefinitions = $previousConfigDefinitions;
-            $this->configdefinitionmappings = $previousConfigDefinitionMappings;
+            $this->configdefinitions = $previousconfigdefinitions;
+            $this->configdefinitionmappings = $previousconfigdefinitionmappings;
 
             return var_export($before, true) != var_export($after, true);
         } else {

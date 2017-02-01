@@ -587,7 +587,8 @@ class cache_helper {
      *
      * @param bool $coreonly If set to true only core definitions will be updated.
      * @param bool $reportonly If set to true the file will not be written.
-     * @return bool Returns true if $reportonly is set and a new config file needs to be written. If $reportonly is not set, return value is not defined.
+     * @return bool Returns true if $reportonly is set and a new config file needs to be written.
+     *              If $reportonly is not set, return value is not defined.
      */
     public static function update_definitions($coreonly = false, $reportonly = false) {
         global $CFG;

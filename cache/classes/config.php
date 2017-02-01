@@ -226,8 +226,8 @@ class cache_config {
                 debugging('Duplicate cache definition detected. This should never happen.', DEBUG_DEVELOPER);
                 continue;
             }
-            // Set defaults
-            cache_config::set_config_defaults($conf);
+            // Set defaults.
+            self::set_config_defaults($conf);
 
             if ($conf['mode'] < cache_store::MODE_APPLICATION || $conf['mode'] > cache_store::MODE_REQUEST) {
                 // Invalid cache mode used for the definition.
@@ -576,6 +576,7 @@ class cache_config {
 
     /**
      * Set default options on cache configuration object.
+     * @param array $conf The cache definition to set defaults values on
      */
     public static function set_config_defaults(&$conf) {
         $conf['mode'] = (int)$conf['mode'];
