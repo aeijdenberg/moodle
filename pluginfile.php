@@ -26,6 +26,7 @@
 
 // Disable moodle specific debug messages and any errors in output.
 define('NO_DEBUG_DISPLAY', true);
+define('REQUIRE_SESSION_LOCK', false); // plugins will need to acquire a lock if they need one
 
 require_once('config.php');
 require_once('lib/filelib.php');

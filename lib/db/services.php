@@ -420,6 +420,7 @@ $functions = array(
         'type' => 'read',
         'loginrequired' => false,
         'ajax' => true,
+        'requiresessionlock' => true, // fetching removes from stack
     ),
     'core_files_get_files' => array(
         'classname' => 'core_files_external',
@@ -787,6 +788,7 @@ $functions = array(
         'type' => 'read',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+        'requiresessionlock' => false, // we don't modify the session
     ),
     'core_message_mark_all_notifications_as_read' => array(
         'classname' => 'core_message_external',

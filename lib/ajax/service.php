@@ -28,6 +28,7 @@
  */
 
 define('AJAX_SCRIPT', true);
+define('REQUIRE_SESSION_LOCK', false); // services can declare requiresessionlock in their config, and actually default to true for now.
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/externallib.php');
