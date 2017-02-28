@@ -47,6 +47,28 @@ class manager {
     protected static $sessionactive = null;
 
     /**
+     * If the current session is not writeable, abort it, and re-open it
+     * requesting (and blocking) until a write lock is acquired.
+     * If current session was already opened with an intentional write lock,
+     * this call will not do anything.
+     * NOTE: Even when using a session handler that does not support non-locking sessions,
+     * if the original session was not opened with the explicit intention of being locked,
+     * this will still restart your session so that code behaviour matches as closely
+     * as practical across environments.
+     */
+    public static function restart_with_write_lock() {
+        if (self::$sessionactive) {
+            if (!self::$handler->has_writelock()) {
+                @self::$handler->abort();
+                self::$sessionactive = false;
+            }
+        }
+        if (!self::$sessionactive) {
+            self::start_session(true);
+        }
+    }
+
+    /**
      * Start user session.
      *
      * Note: This is intended to be called only from lib/setup.php!
@@ -69,14 +91,43 @@ class manager {
             return;
         }
 
+        if (defined('REQUIRE_SESSION_LOCK') && defined('ENABLE_READ_ONLY_SESSIONS') && ENABLE_READ_ONLY_SESSIONS) {
+            $needs_lock = REQUIRE_SESSION_LOCK;
+        } else {
+            $needs_lock = true; // for backwards compatibility, we default to assuming that a lock is needed.
+        }
+        self::start_session($needs_lock);
+    }
+
+    /**
+     * Code to actually start a session. If $acquire_write_lock is not set,
+     * then no write lock will be acquired, and the session will be read-only.
+     */
+    private static function start_session($acquire_write_lock) {
         try {
             self::$handler->init();
+            self::$handler->set_needslock($acquire_write_lock);
             self::prepare_cookies();
             $isnewsession = empty($_COOKIE[session_name()]);
+
+            if (defined('DEBUG_SESSION_TIMING_MIN_TIME')) {
+                $starttime = microtime(true);
+            }
 
             if (!self::$handler->start()) {
                 // Could not successfully start/recover session.
                 throw new \core\session\exception(get_string('servererror'));
+            }
+
+            // DEBUG_SESSION_TIMING_MIN_TIME if defined is a float, and we'll show a message for
+            // session aquisition that exceeds this amount in seconds.
+            if (defined('DEBUG_SESSION_TIMING_MIN_TIME')) {
+                $duration = microtime(true) - $starttime;
+                if ($duration > DEBUG_SESSION_TIMING_MIN_TIME) {
+                    /* don't log the raw session ID, since the session ID itself is a secret */
+                    error_log("slow_session_id:".hash('sha256', session_id())."|duration:".
+                              round($duration, 3)."s|session_url:".$_SERVER['PHP_SELF']."|write_lock:".($acquire_write_lock ? '1' : '0'));
+                }
             }
 
             self::initialise_user_session($isnewsession);
@@ -512,8 +563,7 @@ class manager {
         $DB->delete_records('sessions', array('sid'=>$sid));
         self::init_empty_session();
         self::add_session_record($_SESSION['USER']->id); // Do not use $USER here because it may not be set up yet.
-        session_write_close();
-        self::$sessionactive = false;
+        self::write_close();
     }
 
     /**
@@ -521,24 +571,17 @@ class manager {
      * Unblocks the sessions, other scripts may start executing in parallel.
      */
     public static function write_close() {
-        if (version_compare(PHP_VERSION, '5.6.0', '>=')) {
-            // More control over whether session data
-            // is persisted or not.
-            if (self::$sessionactive && session_id()) {
-                // Write session and release lock only if
-                // indication session start was clean.
-                session_write_close();
-            } else {
-                // Otherwise, if possibile lock exists want
-                // to clear it, but do not write session.
-                @session_abort();
-            }
+        // More control over whether session data
+        // is persisted or not.
+        // If session is read only, we prefer to abort.
+        if (self::$sessionactive && session_id()) {
+            // Write session and release lock only if
+            // indication session start was clean.
+            self::$handler->write_close();
         } else {
-            // Any indication session was started, attempt
-            // to close it.
-            if (self::$sessionactive || session_id()) {
-                session_write_close();
-            }
+            // Otherwise, if possibile lock exists want
+            // to clear it, but do not write session.
+            @self::$handler->abort();
         }
         self::$sessionactive = false;
     }
